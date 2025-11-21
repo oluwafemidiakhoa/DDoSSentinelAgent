@@ -14,7 +14,10 @@ from datetime import datetime
 
 from ddos_sentinel.agent.sentinel import DDoSSentinelAgent
 from ddos_sentinel.data.simulator import TrafficSimulator
-from safedeepagent.core.safe_agent import SafeConfig
+from ddos_sentinel.dns.agent import DNSIntegrityAgent, DNSObservation
+from ddos_sentinel.supply_chain.agent import SupplyChainGuardianAgent, SupplyChainObservation
+from ddos_sentinel.mesh.orchestrator import SecurityMeshOrchestrator
+from safedeepagent.core.safe_agent import SafeConfig, SafeDeepAgent
 
 console = Console()
 
@@ -311,6 +314,327 @@ def status():
     console.print(table)
 
 
+@main.command()
+@click.option(
+    '--scenario',
+    type=click.Choice(['clean', 'network_attack', 'dns_abuse', 'supply_chain_compromise', 'multi_domain']),
+    default='multi_domain',
+    help='Security scenario to simulate'
+)
+@click.option(
+    '--duration',
+    default=60,
+    help='Duration of network traffic simulation in seconds'
+)
+def demo_mesh(scenario: str, duration: int):
+    """
+    Run multi-agent security mesh demonstration.
+
+    Demonstrates coordinated threat detection and mitigation across:
+    - Network (DDoS)
+    - DNS (popularity manipulation)
+    - Supply chain (firmware compromise)
+    """
+    console.print(Panel.fit(
+        "🌐 Multi-Agent Security Mesh Demo",
+        border_style="cyan"
+    ))
+
+    console.print(f"\n[cyan]Initializing security mesh with SafeDeepAgent framework...[/cyan]")
+    console.print(f"[cyan]Scenario: {scenario}[/cyan]\n")
+
+    # Initialize shared SafeDeepAgent for orchestration
+    shared_safe_agent = SafeDeepAgent(safe_config=SafeConfig(
+        enable_action_validation=True,
+        enable_memory_firewalls=True,
+        enable_provenance_tracking=True,
+        enable_sandboxing=True,
+        enable_behavioral_monitoring=True,
+        enable_meta_supervision=True,
+        enable_audit_logging=True,
+        enable_purpose_binding=True,
+        enable_intent_tracking=True,
+        enable_deception_detection=True,
+        enable_risk_adaptation=True,
+        enable_human_governance=True
+    ))
+
+    # Initialize domain-specific agents
+    console.print("[cyan]Initializing agents:[/cyan]")
+
+    network_agent = DDoSSentinelAgent(sensitivity=0.8)
+    console.print("  ✓ DDoS Sentinel Agent (network domain)")
+
+    dns_agent = DNSIntegrityAgent(sensitivity=0.8)
+    console.print("  ✓ DNS Integrity Agent (dns domain)")
+
+    supply_chain_agent = SupplyChainGuardianAgent(sensitivity=0.8)
+    console.print("  ✓ Supply Chain Guardian Agent (supply_chain domain)")
+
+    # Create mesh orchestrator
+    mesh = SecurityMeshOrchestrator(
+        agents=[network_agent, dns_agent, supply_chain_agent],
+        safe_agent=shared_safe_agent
+    )
+    console.print("\n[green]✓ Security mesh initialized with 3 agents[/green]\n")
+
+    # Generate observations based on scenario
+    console.print(f"[cyan]Generating {scenario} observations...[/cyan]")
+    observations = _generate_scenario_observations(scenario, duration)
+
+    # Run end-to-end mesh analysis
+    console.print("[cyan]Running mesh-wide analysis...[/cyan]\n")
+    result = mesh.run_end_to_end(observations)
+
+    # Display results
+    _display_mesh_results(result)
+
+
+def _generate_scenario_observations(scenario: str, duration: int) -> dict:
+    """Generate observations for different security scenarios."""
+    observations = {}
+    simulator = TrafficSimulator(seed=42)
+
+    if scenario == 'clean':
+        # Normal traffic, no attacks
+        observations['network'] = simulator.generate_normal_traffic(
+            duration_seconds=duration,
+            base_pps=1000
+        )
+        observations['dns'] = DNSObservation(
+            domain="example.com",
+            qps=50.0,
+            unique_client_ips=30,
+            asn_distribution={"AS1234": 15, "AS5678": 10, "AS9012": 5},
+            query_types={"A": 25, "AAAA": 20, "MX": 5},
+            http_traffic_ratio=0.8
+        )
+        observations['supply_chain'] = SupplyChainObservation(
+            release_id="v2.4.1",
+            version="2.4.1",
+            signing_key_id="KEY_PROD_001",
+            build_host="build-server-01.company.com",
+            rollout_speed=800.0,
+            total_devices_updated=5000,
+            deployment_duration_hours=6.0,
+            post_release_traffic_multiplier=1.1,
+            is_known_signing_key=True,
+            build_host_reputation="trusted",
+            device_behavior_anomalies=2
+        )
+
+    elif scenario == 'network_attack':
+        # DDoS attack only
+        observations['network'] = simulator.generate_aisuru_ddos_traffic(
+            duration_seconds=duration,
+            attack_pps=150000,
+            botnet_size=5000
+        )
+        observations['dns'] = DNSObservation(
+            domain="example.com",
+            qps=60.0,
+            unique_client_ips=35,
+            asn_distribution={"AS1234": 18, "AS5678": 12, "AS9012": 5},
+            query_types={"A": 30, "AAAA": 25, "MX": 5},
+            http_traffic_ratio=0.75
+        )
+        observations['supply_chain'] = SupplyChainObservation(
+            release_id="v2.4.2",
+            version="2.4.2",
+            signing_key_id="KEY_PROD_001",
+            build_host="build-server-01.company.com",
+            rollout_speed=900.0,
+            total_devices_updated=6000,
+            deployment_duration_hours=6.5,
+            post_release_traffic_multiplier=1.0,
+            is_known_signing_key=True,
+            build_host_reputation="trusted",
+            device_behavior_anomalies=3
+        )
+
+    elif scenario == 'dns_abuse':
+        # DNS popularity manipulation only
+        observations['network'] = simulator.generate_normal_traffic(
+            duration_seconds=duration,
+            base_pps=1000
+        )
+        observations['dns'] = DNSObservation(
+            domain="targetdomain.com",
+            qps=8000.0,  # Massive QPS
+            unique_client_ips=3000,  # Botnet
+            asn_distribution={"AS6666": 2100, "AS7777": 600, "AS8888": 300},  # Concentrated
+            query_types={"A": 7500, "AAAA": 400, "MX": 100},
+            http_traffic_ratio=0.05  # Low HTTP traffic = fake queries
+        )
+        observations['supply_chain'] = SupplyChainObservation(
+            release_id="v2.4.3",
+            version="2.4.3",
+            signing_key_id="KEY_PROD_001",
+            build_host="build-server-01.company.com",
+            rollout_speed=850.0,
+            total_devices_updated=5500,
+            deployment_duration_hours=6.3,
+            post_release_traffic_multiplier=1.05,
+            is_known_signing_key=True,
+            build_host_reputation="trusted",
+            device_behavior_anomalies=1
+        )
+
+    elif scenario == 'supply_chain_compromise':
+        # Firmware compromise only
+        observations['network'] = simulator.generate_normal_traffic(
+            duration_seconds=duration,
+            base_pps=1000
+        )
+        observations['dns'] = DNSObservation(
+            domain="example.com",
+            qps=55.0,
+            unique_client_ips=32,
+            asn_distribution={"AS1234": 16, "AS5678": 11, "AS9012": 5},
+            query_types={"A": 28, "AAAA": 22, "MX": 5},
+            http_traffic_ratio=0.78
+        )
+        observations['supply_chain'] = SupplyChainObservation(
+            release_id="v2.5.0_COMPROMISED",
+            version="2.5.0",
+            signing_key_id="KEY_UNKNOWN_999",  # Unknown key!
+            build_host="suspicious-builder.external.com",  # Suspicious host
+            rollout_speed=25000.0,  # Worm-like speed
+            total_devices_updated=45000,
+            deployment_duration_hours=1.8,  # Very rapid
+            post_release_traffic_multiplier=12.0,  # Massive traffic increase
+            is_known_signing_key=False,  # CRITICAL
+            build_host_reputation="suspicious",
+            device_behavior_anomalies=8000  # Many devices acting weird
+        )
+
+    elif scenario == 'multi_domain':
+        # Coordinated attack across all domains (Aisuru-like)
+        observations['network'] = simulator.generate_aisuru_ddos_traffic(
+            duration_seconds=duration,
+            attack_pps=180000,
+            botnet_size=6000
+        )
+        observations['dns'] = DNSObservation(
+            domain="cloudflare-rank-target.com",
+            qps=6500.0,
+            unique_client_ips=2500,
+            asn_distribution={"AS6666": 1800, "AS7777": 500, "AS8888": 200},
+            query_types={"A": 6000, "AAAA": 400, "MX": 100},
+            http_traffic_ratio=0.08  # Mostly fake queries
+        )
+        observations['supply_chain'] = SupplyChainObservation(
+            release_id="v3.0.0_MALICIOUS",
+            version="3.0.0",
+            signing_key_id="KEY_COMPROMISED_666",
+            build_host="attacker-build-server.evil.net",
+            rollout_speed=30000.0,
+            total_devices_updated=50000,
+            deployment_duration_hours=1.5,
+            post_release_traffic_multiplier=15.0,
+            is_known_signing_key=False,
+            build_host_reputation="suspicious",
+            device_behavior_anomalies=12000
+        )
+
+    return observations
+
+
+def _display_mesh_results(result: dict):
+    """Display mesh analysis results."""
+    analyses = result['per_agent_analyses']
+    global_plan = result['global_plan']
+    summary = result['summary']
+
+    # Summary panel
+    if summary['attacks_detected'] > 0:
+        style = "red"
+        icon = "🚨"
+        title = f"MESH ALERT: {summary['attacks_detected']} DOMAIN(S) UNDER ATTACK"
+    else:
+        style = "green"
+        icon = "✅"
+        title = "ALL DOMAINS SECURE"
+
+    console.print(Panel.fit(f"{icon} {title}", border_style=style))
+
+    # Per-agent results
+    console.print("\n[bold cyan]Per-Agent Analysis:[/bold cyan]\n")
+
+    for analysis in analyses:
+        domain_icon = {
+            "network": "🌐",
+            "dns": "🔍",
+            "supply_chain": "📦"
+        }.get(analysis.domain, "🔒")
+
+        if analysis.attack_detected:
+            severity_color = {
+                "critical": "red",
+                "high": "red",
+                "medium": "yellow",
+                "low": "yellow",
+                "none": "green"
+            }.get(analysis.severity.value, "white")
+
+            console.print(f"{domain_icon} [bold]{analysis.domain.upper()}:[/bold] "
+                         f"[{severity_color}]ATTACK DETECTED[/{severity_color}] "
+                         f"(Severity: {analysis.severity.value.upper()}, "
+                         f"Confidence: {analysis.confidence:.0%})")
+            console.print(f"   {analysis.notes.split(chr(10))[0]}")
+            if analysis.indicators:
+                console.print(f"   Indicators: {len(analysis.indicators)}")
+        else:
+            console.print(f"{domain_icon} [bold]{analysis.domain.upper()}:[/bold] "
+                         f"[green]CLEAN[/green]")
+
+    # Global mitigation plan
+    if global_plan.severity.value != "none":
+        console.print("\n" + "="*70)
+        console.print(Panel.fit(
+            "🛠️  GLOBAL MITIGATION PLAN",
+            border_style="yellow"
+        ))
+
+        console.print(f"\n[bold]Global Severity:[/bold] {global_plan.severity.value.upper()}")
+        console.print(f"[bold]Response Time:[/bold] {global_plan.recommended_response_time}")
+        console.print(f"[bold]Total Actions:[/bold] {global_plan.action_count()}")
+
+        # Immediate actions
+        if global_plan.immediate_actions:
+            console.print("\n[red bold]Immediate Actions:[/red bold]")
+            for i, action in enumerate(global_plan.immediate_actions[:10], 1):  # Limit display
+                console.print(f"  {i}. {action.description}")
+                console.print(f"     Target: {action.target}, Type: {action.action_type}, "
+                             f"Priority: {action.priority}")
+
+        # Follow-up actions (show count)
+        if global_plan.follow_up_actions:
+            console.print(f"\n[yellow]Follow-up Actions:[/yellow] "
+                         f"{len(global_plan.follow_up_actions)} actions planned")
+
+        # Impact
+        console.print(f"\n[bold]Estimated Impact:[/bold]")
+        for line in global_plan.estimated_impact.split('\n')[:5]:  # Limit lines
+            console.print(f"  {line}")
+
+    # Summary table
+    console.print("\n")
+    table = Table(title="Mesh Summary", box=box.ROUNDED)
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", style="white")
+
+    table.add_row("Total Agents", str(summary['total_agents']))
+    table.add_row("Agents Analyzed", str(summary['agents_analyzed']))
+    table.add_row("Attacks Detected", str(summary['attacks_detected']))
+    table.add_row("Affected Domains", ", ".join(summary['affected_domains']) or "None")
+    table.add_row("Global Severity", summary['global_severity'].upper())
+    table.add_row("Mitigation Actions", str(summary['total_mitigation_actions']))
+
+    console.print(table)
+    console.print()
+
+
 def _display_analysis_results(agent: DDoSSentinelAgent):
     """Display analysis results in formatted output."""
     summary = agent.summarize_findings()
@@ -362,7 +686,7 @@ def _display_analysis_results(agent: DDoSSentinelAgent):
 
 def _display_mitigation_plan(agent: DDoSSentinelAgent):
     """Display mitigation recommendations."""
-    mitigation = agent.propose_mitigation()
+    mitigation = agent.propose_mitigation_legacy()
 
     if not mitigation['success']:
         return
