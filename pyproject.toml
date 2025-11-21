@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ddos-sentinel-safedeepagent"
+version = "0.1.0"
+description = "Secure autonomous DDoS detection agent built with SafeDeepAgent framework"
+authors = [
+    {name = "Oluwafemi Idiakhoa", email = "oluwafemidiakhoa@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = ["ddos", "security", "ai-agent", "safedeepagent", "network-security"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Security",
+    "Topic :: System :: Networking :: Monitoring",
+]
+
+dependencies = [
+    "safedeepagent>=0.1.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "scipy>=1.10.0",
+    "scapy>=2.5.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "structlog>=23.1.0",
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "tabulate>=0.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "mypy>=1.5.0",
+]
+
+[project.scripts]
+ddos-sentinel = "scripts.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/oluwafemidiakhoa/DDoSSentinelAgent"
+Repository = "https://github.com/oluwafemidiakhoa/DDoSSentinelAgent"
+Issues = "https://github.com/oluwafemidiakhoa/DDoSSentinelAgent/issues"
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311']
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
