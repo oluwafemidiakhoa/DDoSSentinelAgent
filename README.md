@@ -12,12 +12,24 @@ A production-ready demonstration of secure AI agents for network security, detec
 
 ## Overview
 
-DDoS Sentinel Agent is an autonomous security agent that detects Distributed Denial of Service (DDoS) attacks, specifically Aisuru-style attacks characterized by:
+**DDoS Sentinel Agent** has evolved from a single-agent DDoS detector into a **multi-agent security mesh** that provides comprehensive threat detection across multiple security domains:
 
-- **Massive UDP floods** (95%+ UDP traffic)
-- **Extremely high packet rates** (100k-300k+ packets per second)
-- **Botnet behavior** (thousands of unique source IPs)
-- **Amplification attacks** (small packet sizes, high volume)
+- **Network Domain (DDoS)** - Detects Aisuru-style DDoS attacks:
+  - Massive UDP floods (95%+ UDP traffic)
+  - Extremely high packet rates (100k-300k+ packets per second)
+  - Botnet behavior (thousands of unique source IPs)
+  - Amplification attacks (small packet sizes, high volume)
+
+- **DNS Domain** - Detects DNS-based attacks and manipulation:
+  - DNS popularity manipulation (Aisuru-style rank abuse via Cloudflare 1.1.1.1)
+  - DNS resolver abuse and spam queries
+  - Botnet-driven DNS queries with low HTTP correlation
+
+- **Supply Chain Domain** - Detects firmware and release compromises:
+  - Suspicious firmware releases (TotoLink-style attacks)
+  - Unknown or compromised signing keys
+  - Rapid worm-like deployments
+  - Post-release anomalous device behavior
 
 ### Why SafeDeepAgent?
 
@@ -71,7 +83,29 @@ python scripts/cli.py train-baseline --duration 120
 
 # Check agent status
 python scripts/cli.py status
+
+# Run multi-agent security mesh demo
+python scripts/cli.py demo-mesh --scenario multi_domain
 ```
+
+### Multi-Agent Security Mesh
+
+The new **Security Mesh** coordinates multiple domain-specific agents:
+
+```bash
+# Run mesh demos for different scenarios
+python scripts/cli.py demo-mesh --scenario clean                # All domains clean
+python scripts/cli.py demo-mesh --scenario network_attack       # DDoS only
+python scripts/cli.py demo-mesh --scenario dns_abuse            # DNS manipulation only
+python scripts/cli.py demo-mesh --scenario supply_chain_compromise  # Firmware compromise
+python scripts/cli.py demo-mesh --scenario multi_domain         # Coordinated attack (Aisuru-like)
+```
+
+The mesh demonstrates:
+- **Coordinated threat detection** across network, DNS, and supply chain domains
+- **Cross-domain correlation** to identify sophisticated multi-vector attacks
+- **Unified mitigation planning** with prioritized immediate and follow-up actions
+- **Meta-supervision** via SafeDeepAgent for orchestration-level security
 
 ### Python API
 
@@ -110,6 +144,42 @@ if result['success'] and result['analysis'].attack_detected:
     audit = agent.export_audit_report("ddos_report.json")
 ```
 
+**Multi-Agent Mesh API:**
+
+```python
+from ddos_sentinel.agent.sentinel import DDoSSentinelAgent
+from ddos_sentinel.dns.agent import DNSIntegrityAgent, DNSObservation
+from ddos_sentinel.supply_chain.agent import SupplyChainGuardianAgent, SupplyChainObservation
+from ddos_sentinel.mesh.orchestrator import SecurityMeshOrchestrator
+from safedeepagent.core.safe_agent import SafeDeepAgent, SafeConfig
+
+# Initialize domain-specific agents
+network_agent = DDoSSentinelAgent(sensitivity=0.8)
+dns_agent = DNSIntegrityAgent(sensitivity=0.8)
+supply_chain_agent = SupplyChainGuardianAgent(sensitivity=0.8)
+
+# Create mesh orchestrator
+safe_agent = SafeDeepAgent(safe_config=SafeConfig())
+mesh = SecurityMeshOrchestrator(
+    agents=[network_agent, dns_agent, supply_chain_agent],
+    safe_agent=safe_agent
+)
+
+# Prepare observations for each domain
+observations = {
+    "network": packets,  # List[TrafficPacket]
+    "dns": DNSObservation(...),
+    "supply_chain": SupplyChainObservation(...)
+}
+
+# Run end-to-end analysis and get global mitigation plan
+result = mesh.run_end_to_end(observations)
+
+print(f"Attacks detected: {result['summary']['attacks_detected']}")
+print(f"Global severity: {result['summary']['global_severity']}")
+print(f"Mitigation actions: {result['global_plan'].action_count()}")
+```
+
 ---
 
 ## Architecture
@@ -117,30 +187,52 @@ if result['success'] and result['analysis'].attack_detected:
 ### System Components
 
 ```
-DDoS Sentinel Agent
-├── Data Layer (ddos_sentinel/data/)
-│   ├── TrafficSimulator - Generates realistic network traffic
-│   └── TrafficFeatureExtractor - Extracts detection features
+Multi-Agent Security Mesh
+├── Core Layer (ddos_sentinel/core/)
+│   ├── types.py - Shared types (Severity, AnalysisResult, MitigationPlan)
+│   └── base_agent.py - BaseSecurityAgent interface
+│
+├── Domain Agents
+│   ├── Network (ddos_sentinel/agent/)
+│   │   └── DDoSSentinelAgent - DDoS detection
+│   ├── DNS (ddos_sentinel/dns/)
+│   │   └── DNSIntegrityAgent - DNS abuse detection
+│   └── Supply Chain (ddos_sentinel/supply_chain/)
+│       └── SupplyChainGuardianAgent - Firmware compromise detection
+│
+├── Mesh Orchestration (ddos_sentinel/mesh/)
+│   └── SecurityMeshOrchestrator - Multi-agent coordination
 │
 ├── Detection Layer (ddos_sentinel/detection/)
 │   ├── AisuruSignatureDetector - Signature-based detection
 │   └── DDoSDetectionEngine - Main detection engine
 │
-├── Agent Layer (ddos_sentinel/agent/)
-│   └── DDoSSentinelAgent - SafeDeepAgent integration
+├── Data Layer (ddos_sentinel/data/)
+│   ├── TrafficSimulator - Generates realistic network traffic
+│   └── TrafficFeatureExtractor - Extracts detection features
 │
 └── Interface Layer (scripts/)
     └── CLI - Command-line interface
 ```
 
-### Detection Pipeline
+### Detection Pipelines
 
+**Single-Agent Pipeline (Network DDoS):**
 1. **Traffic Ingestion** → Raw network packets
 2. **Feature Extraction** → Time-windowed metrics (PPS, UDP ratio, unique IPs, etc.)
 3. **Signature Matching** → Aisuru-specific pattern detection
 4. **Anomaly Detection** → Baseline deviation analysis
 5. **Threat Assessment** → Severity classification (NONE/LOW/MEDIUM/HIGH/CRITICAL)
 6. **Mitigation Planning** → Automated response recommendations
+
+**Multi-Agent Mesh Pipeline:**
+1. **Observation Collection** → Gather data from all security domains
+2. **Parallel Analysis** → Each agent analyzes its domain independently
+3. **Result Aggregation** → Collect AnalysisResults from all agents
+4. **Cross-Domain Correlation** → Identify multi-vector attacks
+5. **Global Severity Assessment** → Determine overall threat level
+6. **Unified Mitigation Planning** → Synthesize global mitigation plan
+7. **Meta-Supervision** → SafeDeepAgent validates all orchestration actions
 
 ### Aisuru Detection Signatures
 
@@ -213,21 +305,31 @@ else:
 DDoSSentinelAgent/
 ├── ddos_sentinel/               # Core package
 │   ├── __init__.py
+│   ├── core/                    # Multi-agent core types & interfaces
+│   │   ├── types.py             # Shared types (Severity, AnalysisResult, etc.)
+│   │   └── base_agent.py        # BaseSecurityAgent interface
+│   ├── agent/                   # Network domain agent
+│   │   └── sentinel.py          # DDoSSentinelAgent (DDoS detection)
+│   ├── dns/                     # DNS domain agent
+│   │   └── agent.py             # DNSIntegrityAgent (DNS abuse detection)
+│   ├── supply_chain/            # Supply chain domain agent
+│   │   └── agent.py             # SupplyChainGuardianAgent
+│   ├── mesh/                    # Multi-agent orchestration
+│   │   └── orchestrator.py      # SecurityMeshOrchestrator
 │   ├── data/                    # Data simulation & features
 │   │   ├── simulator.py         # Traffic generation
 │   │   └── features.py          # Feature extraction
-│   ├── detection/               # Detection engine
-│   │   ├── engine.py            # Main detection engine
-│   │   └── signatures.py        # Aisuru signature detection
-│   └── agent/                   # SafeDeepAgent integration
-│       └── sentinel.py          # DDoS Sentinel Agent
+│   └── detection/               # Detection engine
+│       ├── engine.py            # Main detection engine
+│       └── signatures.py        # Aisuru signature detection
 ├── scripts/                     # CLI & demos
 │   └── cli.py                   # Command-line interface
 ├── tests/                       # Test suite
 │   ├── test_simulator.py        # Simulation tests
 │   ├── test_detection.py        # Detection tests
 │   ├── test_agent.py            # Agent tests
-│   └── test_integration.py      # Integration tests
+│   ├── test_integration.py      # Integration tests
+│   └── test_mesh.py             # Multi-agent mesh tests
 ├── requirements.txt             # Python dependencies
 ├── pyproject.toml              # Project metadata
 ├── pytest.ini                  # Test configuration
@@ -391,4 +493,6 @@ If you use this project in your research or development, please cite:
 
 ## Acknowledgments
 
-This project showcases the **SafeDeepAgent** framework's 12 security foundations applied to real-world network security challenges. It demonstrates how autonomous AI agents can be made secure, auditable, and trustworthy through comprehensive defense-in-depth.
+This project showcases the **SafeDeepAgent** framework's 12 security foundations applied to real-world network security challenges.
+
+The evolution to a **multi-agent security mesh** demonstrates how SafeDeepAgent can coordinate multiple specialized agents across different security domains (network, DNS, supply chain) while maintaining security, auditability, and trustworthiness through comprehensive defense-in-depth. This architecture mirrors real-world attacks like Aisuru, which combined DDoS, DNS manipulation, and firmware compromise into a coordinated campaign.
