@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ddos-sentinel-safedeepagent"
-version = "0.1.0"
-description = "Secure autonomous DDoS detection agent built with SafeDeepAgent framework"
+version = "0.2.0"
+description = "Multi-agent security mesh for DDoS, DNS, and supply chain threat detection built with SafeDeepAgent"
 authors = [
     {name = "Oluwafemi Idiakhoa", email = "oluwafemidiakhoa@gmail.com"}
 ]
