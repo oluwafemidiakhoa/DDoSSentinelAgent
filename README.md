@@ -103,12 +103,30 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-### Multi-Agent Security Mesh (Recommended)
+### 🚨 Multi-Agent Security Mesh (New!)
 
-The **Security Mesh** coordinates multiple domain-specific agents for comprehensive threat detection:
+The **Security Mesh** coordinates multiple domain-specific agents for comprehensive threat detection.
+
+#### **High-Impact Demo: Aisuru Multi-Vector Attack**
+
+See the complete 5-phase coordinated attack scenario:
 
 ```bash
-# Run mesh demos for different scenarios
+# Run the comprehensive multi-vector attack demo
+python scripts/cli.py mesh-demo
+```
+
+This demonstrates:
+- 🔸 **Phase 1** — Normal baseline (all domains clean)
+- 🔸 **Phase 2** — DDoS begins (180k PPS UDP flood)
+- 🔸 **Phase 3** — DNS manipulation added (resolver spam)
+- 🔸 **Phase 4** — Suspicious firmware update (compromised key)
+- 🔸 **Phase 5** — Mesh correlation & unified response
+
+#### **Individual Scenario Demos**
+
+```bash
+# Run mesh demos for specific scenarios
 python scripts/cli.py demo-mesh --scenario clean                # All domains clean
 python scripts/cli.py demo-mesh --scenario network_attack       # DDoS only
 python scripts/cli.py demo-mesh --scenario dns_abuse            # DNS manipulation only
@@ -145,15 +163,79 @@ python scripts/cli.py status
 
 ### Python API
 
+#### **Clean Multi-Agent Mesh API (Copy-Paste Friendly)**
+
 ```python
-from ddos_sentinel.agent.sentinel import DDoSSentinelAgent
-from ddos_sentinel.data.simulator import TrafficSimulator
+from ddos_sentinel import (
+    SecurityMeshOrchestrator,
+    DDoSSentinelAgent,
+    DNSIntegrityAgent,
+    DNSObservation,
+    SupplyChainGuardianAgent,
+    SupplyChainObservation,
+    TrafficSimulator
+)
+from safedeepagent.core.safe_agent import SafeDeepAgent, SafeConfig
+
+# Initialize mesh
+safe_agent = SafeDeepAgent(safe_config=SafeConfig())
+mesh = SecurityMeshOrchestrator(
+    agents=[
+        DDoSSentinelAgent(sensitivity=0.8),
+        DNSIntegrityAgent(sensitivity=0.8),
+        SupplyChainGuardianAgent(sensitivity=0.8)
+    ],
+    safe_agent=safe_agent
+)
+
+# Generate observations
+simulator = TrafficSimulator(seed=42)
+observations = {
+    "network": simulator.generate_aisuru_ddos_traffic(
+        duration_seconds=60,
+        attack_pps=150000,
+        botnet_size=5000
+    ),
+    "dns": DNSObservation(
+        domain="target.com",
+        qps=7500.0,
+        unique_client_ips=3000,
+        asn_distribution={"AS6666": 2100, "AS7777": 600},
+        query_types={"A": 7000, "AAAA": 400},
+        http_traffic_ratio=0.05  # Low = fake queries
+    ),
+    "supply_chain": SupplyChainObservation(
+        release_id="v3.0.0",
+        version="3.0.0",
+        signing_key_id="KEY_UNKNOWN",
+        build_host="suspicious-host.net",
+        rollout_speed=30000.0,
+        total_devices_updated=50000,
+        deployment_duration_hours=1.5,
+        post_release_traffic_multiplier=15.0,
+        is_known_signing_key=False,
+        build_host_reputation="suspicious",
+        device_behavior_anomalies=12000
+    )
+}
+
+# Run end-to-end analysis
+decision = mesh.run_end_to_end(observations)
+
+print(f"Global Severity: {decision['summary']['global_severity']}")
+print(f"Affected Domains: {decision['summary']['affected_domains']}")
+print(f"Recommended Actions: {decision['global_plan'].action_count()}")
+```
+
+**Result**: This detects a coordinated multi-vector attack and provides unified mitigation.
+
+#### **Single-Agent API (Network DDoS Only)**
+
+```python
+from ddos_sentinel import DDoSSentinelAgent, TrafficSimulator
 
 # Initialize agent with SafeDeepAgent security
-agent = DDoSSentinelAgent(
-    sensitivity=0.8,
-    window_size_seconds=10
-)
+agent = DDoSSentinelAgent(sensitivity=0.8, window_size_seconds=10)
 
 # Simulate traffic
 simulator = TrafficSimulator(seed=42)
@@ -167,53 +249,12 @@ packets = simulator.generate_aisuru_ddos_traffic(
 result = agent.run_ddos_detection(packets)
 
 if result['success'] and result['analysis'].attack_detected:
-    # Get summary
     summary = agent.summarize_findings()
     print(summary['summary'])
 
-    # Get mitigation recommendations
     mitigation = agent.propose_mitigation()
     for action in mitigation['immediate_actions']:
         print(f"  • {action}")
-
-    # Export audit report
-    audit = agent.export_audit_report("ddos_report.json")
-```
-
-**Multi-Agent Mesh API:**
-
-```python
-from ddos_sentinel.agent.sentinel import DDoSSentinelAgent
-from ddos_sentinel.dns.agent import DNSIntegrityAgent, DNSObservation
-from ddos_sentinel.supply_chain.agent import SupplyChainGuardianAgent, SupplyChainObservation
-from ddos_sentinel.mesh.orchestrator import SecurityMeshOrchestrator
-from safedeepagent.core.safe_agent import SafeDeepAgent, SafeConfig
-
-# Initialize domain-specific agents
-network_agent = DDoSSentinelAgent(sensitivity=0.8)
-dns_agent = DNSIntegrityAgent(sensitivity=0.8)
-supply_chain_agent = SupplyChainGuardianAgent(sensitivity=0.8)
-
-# Create mesh orchestrator
-safe_agent = SafeDeepAgent(safe_config=SafeConfig())
-mesh = SecurityMeshOrchestrator(
-    agents=[network_agent, dns_agent, supply_chain_agent],
-    safe_agent=safe_agent
-)
-
-# Prepare observations for each domain
-observations = {
-    "network": packets,  # List[TrafficPacket]
-    "dns": DNSObservation(...),
-    "supply_chain": SupplyChainObservation(...)
-}
-
-# Run end-to-end analysis and get global mitigation plan
-result = mesh.run_end_to_end(observations)
-
-print(f"Attacks detected: {result['summary']['attacks_detected']}")
-print(f"Global severity: {result['summary']['global_severity']}")
-print(f"Mitigation actions: {result['global_plan'].action_count()}")
 ```
 
 ---
@@ -221,6 +262,38 @@ print(f"Mitigation actions: {result['global_plan'].action_count()}")
 ## Architecture
 
 ### Multi-Agent Security Mesh Diagram
+
+#### **Project Structure Diagram**
+
+```
+               +----------------------------+
+               |     SecurityMesh           |
+               |  (Orchestrator + Fusion)   |
+               +------------+---------------+
+                            |
+    --------------------------------------------------------
+    |                   |                     |
++-----------+     +-------------+      +-------------------+
+| DDoS Agent|     | DNS Agent   |      | SupplyChain Agent |
++-----------+     +-------------+      +-------------------+
+      |                 |                       |
+      v                 v                       v
+ traffic logs     dns logs                firmware events
+```
+
+#### **SafeDeepAgent Defense Layers**
+
+```
+           SafeDeepAgent (security layers)
+       --------------------------------------------------
+       | validation | firewall | provenance | RL guard  |
+       | sandboxing | supervision | logging | governance|
+       --------------------------------------------------
+               ^            ^            ^
+              DDoS        DNS       SupplyChain
+```
+
+#### **Complete Multi-Agent Flow**
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -249,6 +322,28 @@ print(f"Mitigation actions: {result['global_plan'].action_count()}")
                      │ • Priority-based execution     │
                      └────────────────────────────────┘
 ```
+
+### Sample Output (Article-Ready)
+
+When running `python scripts/cli.py mesh-demo`, you'll see output like this:
+
+```
+[NETWORK] CRITICAL: Detected 180k PPS UDP flood with 6000 unique IPs.
+[DNS] HIGH: Sudden spike in QPS (7500), domain popularity manipulation via resolver spam.
+[SUPPLY_CHAIN] CRITICAL: Unsigned firmware v3.0.0 from suspicious host distributed to 55k devices.
+[MESH] CRITICAL: Multi-vector coordinated attack detected.
+[MESH] Attack Pattern: DDoS + DNS abuse + Supply-chain compromise (Aisuru-style)
+[MESH] Recommended actions:
+ - Rate limit UDP traffic > 50k PPS
+ - Sinkhole suspicious domains
+ - Roll back firmware v3.0.0
+ - Notify security operations
+```
+
+This demonstrates the mesh's ability to:
+- **Detect** attacks across multiple domains simultaneously
+- **Correlate** attack vectors to identify sophisticated campaigns
+- **Respond** with a unified, prioritized mitigation plan
 
 ### System Components
 

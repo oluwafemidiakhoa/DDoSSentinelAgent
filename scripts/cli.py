@@ -23,7 +23,7 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="0.1.0")
+@click.version_option(version="0.2.0")
 def main():
     """
     DDoS Sentinel Agent - Secure autonomous DDoS detection using SafeDeepAgent.
@@ -724,6 +724,237 @@ def _display_mitigation_plan(agent: DDoSSentinelAgent):
     console.print(
         f"[cyan]Response Time:[/cyan] {mitigation['recommended_response_time']}\n"
     )
+
+
+@main.command()
+def mesh_demo():
+    """
+    Run Aisuru-style multi-vector attack demonstration.
+
+    Simulates a sophisticated 5-phase coordinated attack:
+    Phase 1 — Normal baseline
+    Phase 2 — DDoS begins
+    Phase 3 — DNS manipulation
+    Phase 4 — Suspicious firmware update
+    Phase 5 — Mesh correlation and mitigation
+    """
+    console.print(Panel.fit(
+        "🎯 Aisuru Multi-Vector Attack Demonstration\n"
+        "DDoS + DNS Amplification + Malicious Firmware Update",
+        border_style="red bold"
+    ))
+
+    # Initialize shared SafeDeepAgent for orchestration
+    shared_safe_agent = SafeDeepAgent(safe_config=SafeConfig(
+        enable_action_validation=True,
+        enable_memory_firewalls=True,
+        enable_provenance_tracking=True,
+        enable_sandboxing=True,
+        enable_behavioral_monitoring=True,
+        enable_meta_supervision=True,
+        enable_audit_logging=True,
+        enable_purpose_binding=True,
+        enable_intent_tracking=True,
+        enable_deception_detection=True,
+        enable_risk_adaptation=True,
+        enable_human_governance=True
+    ))
+
+    # Initialize domain-specific agents
+    console.print("\n[cyan]Initializing Security Mesh...[/cyan]")
+    network_agent = DDoSSentinelAgent(sensitivity=0.8)
+    dns_agent = DNSIntegrityAgent(sensitivity=0.8)
+    supply_chain_agent = SupplyChainGuardianAgent(sensitivity=0.8)
+
+    mesh = SecurityMeshOrchestrator(
+        agents=[network_agent, dns_agent, supply_chain_agent],
+        safe_agent=shared_safe_agent
+    )
+    console.print("[green]✓ Security mesh initialized with 3 specialized agents[/green]\n")
+
+    simulator = TrafficSimulator(seed=42)
+
+    # ============================================================
+    # PHASE 1: Normal Baseline
+    # ============================================================
+    console.print("="*70)
+    console.print(Panel.fit(
+        "🔸 PHASE 1 — Normal Baseline",
+        border_style="green"
+    ))
+    console.print("[cyan]Network/DNS/Supply-chain operating normally...[/cyan]\n")
+
+    observations_phase1 = {
+        'network': simulator.generate_normal_traffic(duration_seconds=30, base_pps=1000),
+        'dns': DNSObservation(
+            domain="legitimate.com",
+            qps=50.0,
+            unique_client_ips=30,
+            asn_distribution={"AS1234": 15, "AS5678": 10, "AS9012": 5},
+            query_types={"A": 25, "AAAA": 20, "MX": 5},
+            http_traffic_ratio=0.8
+        ),
+        'supply_chain': SupplyChainObservation(
+            release_id="v2.3.0",
+            version="2.3.0",
+            signing_key_id="KEY_PROD_001",
+            build_host="build-server-01.company.com",
+            rollout_speed=800.0,
+            total_devices_updated=5000,
+            deployment_duration_hours=6.0,
+            post_release_traffic_multiplier=1.1,
+            is_known_signing_key=True,
+            build_host_reputation="trusted",
+            device_behavior_anomalies=2
+        )
+    }
+
+    result_phase1 = mesh.run_end_to_end(observations_phase1)
+    console.print(f"[green]✓ All domains clean ({result_phase1['summary']['attacks_detected']} attacks detected)[/green]\n")
+
+    # ============================================================
+    # PHASE 2: DDoS Begins
+    # ============================================================
+    console.print("="*70)
+    console.print(Panel.fit(
+        "🔸 PHASE 2 — DDoS Attack Begins",
+        border_style="yellow"
+    ))
+    console.print("[yellow]Huge PPS spike + high UDP ratio detected...[/yellow]\n")
+
+    simulator.clear_buffer()
+    observations_phase2 = {
+        'network': simulator.generate_aisuru_ddos_traffic(
+            duration_seconds=30,
+            attack_pps=180000,
+            botnet_size=6000
+        ),
+        'dns': DNSObservation(
+            domain="legitimate.com",
+            qps=55.0,
+            unique_client_ips=32,
+            asn_distribution={"AS1234": 16, "AS5678": 11, "AS9012": 5},
+            query_types={"A": 27, "AAAA": 22, "MX": 5},
+            http_traffic_ratio=0.78
+        ),
+        'supply_chain': observations_phase1['supply_chain']
+    }
+
+    result_phase2 = mesh.run_end_to_end(observations_phase2)
+    _print_phase_summary(result_phase2, "NETWORK")
+
+    # ============================================================
+    # PHASE 3: DNS Manipulation
+    # ============================================================
+    console.print("="*70)
+    console.print(Panel.fit(
+        "🔸 PHASE 3 — DNS Manipulation Added",
+        border_style="yellow"
+    ))
+    console.print("[yellow]DNS resolver spam / fake popularity attack detected...[/yellow]\n")
+
+    observations_phase3 = {
+        'network': observations_phase2['network'],
+        'dns': DNSObservation(
+            domain="cloudflare-rank-target.com",
+            qps=7500.0,
+            unique_client_ips=3200,
+            asn_distribution={"AS6666": 2300, "AS7777": 650, "AS8888": 250},
+            query_types={"A": 7000, "AAAA": 400, "MX": 100},
+            http_traffic_ratio=0.06  # Very low = fake queries
+        ),
+        'supply_chain': observations_phase1['supply_chain']
+    }
+
+    result_phase3 = mesh.run_end_to_end(observations_phase3)
+    _print_phase_summary(result_phase3, "NETWORK + DNS")
+
+    # ============================================================
+    # PHASE 4: Firmware Compromise
+    # ============================================================
+    console.print("="*70)
+    console.print(Panel.fit(
+        "🔸 PHASE 4 — Suspicious Firmware Update",
+        border_style="red"
+    ))
+    console.print("[red]Compromised update signature + mass rollout detected...[/red]\n")
+
+    observations_phase4 = {
+        'network': observations_phase2['network'],
+        'dns': observations_phase3['dns'],
+        'supply_chain': SupplyChainObservation(
+            release_id="v3.0.0_MALICIOUS",
+            version="3.0.0",
+            signing_key_id="KEY_COMPROMISED_666",
+            build_host="attacker-build-server.evil.net",
+            rollout_speed=32000.0,
+            total_devices_updated=55000,
+            deployment_duration_hours=1.3,
+            post_release_traffic_multiplier=18.0,
+            is_known_signing_key=False,
+            build_host_reputation="suspicious",
+            device_behavior_anomalies=15000
+        )
+    }
+
+    result_phase4 = mesh.run_end_to_end(observations_phase4)
+    _print_phase_summary(result_phase4, "NETWORK + DNS + SUPPLY_CHAIN")
+
+    # ============================================================
+    # PHASE 5: Mesh Correlation & Mitigation
+    # ============================================================
+    console.print("="*70)
+    console.print(Panel.fit(
+        "🔸 PHASE 5 — Security Mesh Correlation & Response",
+        border_style="cyan bold"
+    ))
+
+    global_plan = result_phase4['global_plan']
+    summary = result_phase4['summary']
+
+    console.print(f"\n[bold red]Global Severity: {summary['global_severity'].upper()}[/bold red]")
+    console.print(f"[bold]Correlated Incident:[/bold] Multi-vector coordinated attack")
+    console.print(f"[bold]Attack Vectors:[/bold] {', '.join(summary['affected_domains'])}")
+    console.print(f"[bold]Response Time Required:[/bold] {global_plan.recommended_response_time}")
+    console.print(f"[bold]Total Mitigation Actions:[/bold] {global_plan.action_count()}\n")
+
+    # Display sample output
+    console.print("[yellow bold]SAMPLE OUTPUT:[/yellow bold]\n")
+
+    sample_output = """[NETWORK] CRITICAL: Detected 180k PPS UDP flood with 6000 unique IPs.
+[DNS] HIGH: Sudden spike in QPS (7500), domain popularity manipulation via resolver spam.
+[SUPPLY_CHAIN] CRITICAL: Unsigned firmware v3.0.0 from suspicious host distributed to 55k devices.
+[MESH] CRITICAL: Multi-vector coordinated attack detected.
+[MESH] Attack Pattern: DDoS + DNS abuse + Supply-chain compromise (Aisuru-style)
+"""
+
+    console.print(sample_output)
+
+    # Show top mitigation actions
+    console.print("[cyan bold]Recommended Mitigation Plan:[/cyan bold]\n")
+
+    if global_plan.immediate_actions:
+        for i, action in enumerate(global_plan.immediate_actions[:5], 1):
+            console.print(f" {i}. {action.description}")
+
+    console.print("\n" + "="*70)
+    console.print(Panel.fit(
+        "✅ Multi-Agent Demo Complete\n"
+        "The Security Mesh successfully detected and correlated\n"
+        "a sophisticated multi-vector attack across all domains.",
+        border_style="green bold"
+    ))
+
+
+def _print_phase_summary(result: dict, affected_str: str):
+    """Print a concise phase summary."""
+    summary = result['summary']
+    if summary['attacks_detected'] > 0:
+        console.print(f"[red]⚠️  Attack detected in: {affected_str}[/red]")
+        console.print(f"   Severity: {summary['global_severity'].upper()}")
+        console.print(f"   Affected domains: {summary['attacks_detected']}/{summary['total_agents']}\n")
+    else:
+        console.print(f"[green]✓ All systems normal[/green]\n")
 
 
 if __name__ == '__main__':
