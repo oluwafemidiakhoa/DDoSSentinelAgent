@@ -6,6 +6,8 @@ A production-ready multi-agent security mesh for network threat detection. Coord
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![SafeDeepAgent](https://img.shields.io/badge/powered%20by-SafeDeepAgent-green.svg)](https://github.com/oluwafemidiakhoa/Deepagent)
+[![Multi-Agent](https://img.shields.io/badge/agents-3%20domains-purple.svg)](https://github.com/oluwafemidiakhoa/DDoSSentinelAgent)
+[![Architecture](https://img.shields.io/badge/architecture-security%20mesh-orange.svg)](https://github.com/oluwafemidiakhoa/DDoSSentinelAgent)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -30,6 +32,41 @@ A production-ready multi-agent security mesh for network threat detection. Coord
   - Unknown or compromised signing keys
   - Rapid worm-like deployments
   - Post-release anomalous device behavior
+
+### Multi-Agent vs Single-Agent Architecture
+
+| Capability | Single-Agent | Multi-Agent Mesh |
+|------------|--------------|------------------|
+| **Attack Coverage** | Network-layer DDoS only | Network + DNS + Supply Chain |
+| **Threat Correlation** | Single-domain analysis | Cross-domain correlation |
+| **Attack Detection** | Isolated signatures | Multi-vector attack patterns |
+| **Mitigation Planning** | Domain-specific actions | Unified global response plan |
+| **Complexity Handling** | Simple attacks | Sophisticated campaigns (Aisuru-like) |
+| **False Positive Reduction** | Domain-level confidence | Cross-domain validation |
+| **Security Oversight** | Agent-level SafeDeepAgent | Agent + Orchestrator-level |
+| **Scalability** | Single bottleneck | Parallel distributed analysis |
+
+### Key Features of Multi-Agent Architecture
+
+🤖 **3 Specialized Domain Agents**
+- Network Agent: DDoS attack detection and traffic analysis
+- DNS Agent: DNS manipulation and resolver abuse detection
+- Supply Chain Agent: Firmware compromise and worm detection
+
+🔗 **Coordinated Threat Detection**
+- Parallel analysis across all security domains
+- Cross-domain correlation for sophisticated attack patterns
+- Unified threat assessment with global severity scoring
+
+🎯 **Advanced Attack Detection**
+- Single-vector attacks (DDoS, DNS abuse, or firmware compromise)
+- Multi-vector coordinated campaigns (Aisuru-style attacks)
+- Real-time and historical analysis modes
+
+🛡️ **SafeDeepAgent Security Framework**
+- All 3 agents wrapped in SafeDeepAgent's 12 security foundations
+- Orchestrator-level meta-supervision for mesh coordination
+- Complete audit trails and provenance tracking
 
 ### Why SafeDeepAgent?
 
@@ -66,7 +103,28 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-### Basic Usage
+### Multi-Agent Security Mesh (Recommended)
+
+The **Security Mesh** coordinates multiple domain-specific agents for comprehensive threat detection:
+
+```bash
+# Run mesh demos for different scenarios
+python scripts/cli.py demo-mesh --scenario clean                # All domains clean
+python scripts/cli.py demo-mesh --scenario network_attack       # DDoS only
+python scripts/cli.py demo-mesh --scenario dns_abuse            # DNS manipulation only
+python scripts/cli.py demo-mesh --scenario supply_chain_compromise  # Firmware compromise
+python scripts/cli.py demo-mesh --scenario multi_domain         # Coordinated attack (Aisuru-like)
+```
+
+The mesh demonstrates:
+- **Coordinated threat detection** across network, DNS, and supply chain domains
+- **Cross-domain correlation** to identify sophisticated multi-vector attacks
+- **Unified mitigation planning** with prioritized immediate and follow-up actions
+- **Meta-supervision** via SafeDeepAgent for orchestration-level security
+
+### Single-Agent Usage (Network DDoS Only)
+
+For single-domain network analysis:
 
 ```bash
 # Run normal traffic demo (no attack)
@@ -83,29 +141,7 @@ python scripts/cli.py train-baseline --duration 120
 
 # Check agent status
 python scripts/cli.py status
-
-# Run multi-agent security mesh demo
-python scripts/cli.py demo-mesh --scenario multi_domain
 ```
-
-### Multi-Agent Security Mesh
-
-The new **Security Mesh** coordinates multiple domain-specific agents:
-
-```bash
-# Run mesh demos for different scenarios
-python scripts/cli.py demo-mesh --scenario clean                # All domains clean
-python scripts/cli.py demo-mesh --scenario network_attack       # DDoS only
-python scripts/cli.py demo-mesh --scenario dns_abuse            # DNS manipulation only
-python scripts/cli.py demo-mesh --scenario supply_chain_compromise  # Firmware compromise
-python scripts/cli.py demo-mesh --scenario multi_domain         # Coordinated attack (Aisuru-like)
-```
-
-The mesh demonstrates:
-- **Coordinated threat detection** across network, DNS, and supply chain domains
-- **Cross-domain correlation** to identify sophisticated multi-vector attacks
-- **Unified mitigation planning** with prioritized immediate and follow-up actions
-- **Meta-supervision** via SafeDeepAgent for orchestration-level security
 
 ### Python API
 
@@ -183,6 +219,36 @@ print(f"Mitigation actions: {result['global_plan'].action_count()}")
 ---
 
 ## Architecture
+
+### Multi-Agent Security Mesh Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     Security Mesh Orchestrator                          │
+│                   (SafeDeepAgent Meta-Supervision)                      │
+└────────────────────┬───────────────┬────────────────┬───────────────────┘
+                     │               │                │
+         ┌───────────▼──────┐  ┌────▼─────────┐  ┌──▼──────────────────┐
+         │  Network Agent   │  │  DNS Agent   │  │ Supply Chain Agent  │
+         │   (DDoS Detection)│  │(DNS Integrity)│ │  (Firmware Guard)   │
+         └───────────┬──────┘  └────┬─────────┘  └──┬──────────────────┘
+                     │               │                │
+         ┌───────────▼──────┐  ┌────▼─────────┐  ┌──▼──────────────────┐
+         │ Traffic Packets  │  │DNS Queries   │  │ Firmware Releases   │
+         │ • UDP floods     │  │• Popularity  │  │ • Signing keys      │
+         │ • High PPS       │  │• Resolver    │  │ • Deployment rate   │
+         │ • Botnet IPs     │  │  abuse       │  │ • Device behavior   │
+         └──────────────────┘  └──────────────┘  └─────────────────────┘
+                     │               │                │
+                     └───────────────┼────────────────┘
+                                     │
+                     ┌───────────────▼────────────────┐
+                     │   Global Mitigation Plan       │
+                     │ • Cross-domain correlation     │
+                     │ • Unified response actions     │
+                     │ • Priority-based execution     │
+                     └────────────────────────────────┘
+```
 
 ### System Components
 
