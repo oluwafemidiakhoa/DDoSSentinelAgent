@@ -1,8 +1,8 @@
 # DDoS Sentinel Agent
 
-**Secure autonomous DDoS detection built with SafeDeepAgent**
+**Multi-agent secure autonomous DDoS detection built with SafeDeepAgent**
 
-A production-ready demonstration of secure AI agents for network security, detecting Aisuru-style DDoS attacks using the SafeDeepAgent framework's 12 foundations and 13-layer defense model.
+A production-ready multi-agent security mesh for network threat detection. Coordinate specialized AI agents across network, DNS, and supply chain domains to detect sophisticated attacks like Aisuru, powered by SafeDeepAgent's 12 security foundations and 13-layer defense model.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![SafeDeepAgent](https://img.shields.io/badge/powered%20by-SafeDeepAgent-green.svg)](https://github.com/oluwafemidiakhoa/Deepagent)
