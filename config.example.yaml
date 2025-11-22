@@ -1,0 +1,63 @@
+# DDoS Sentinel Agent Configuration
+# Copy this to config.yaml and customize for your environment
+
+# Detection configuration
+detection:
+  window_size_seconds: 10        # Time window for aggregating traffic
+  sensitivity: 0.8                # Detection sensitivity (0.0-1.0, higher = more sensitive)
+  enable_baseline: true           # Enable baseline learning
+  enable_advanced_features: true  # Compute advanced statistical features
+
+  # Detection thresholds
+  thresholds:
+    # Packets per second thresholds
+    pps_warning: 50000            # Warning level
+    pps_critical: 100000          # Critical level
+
+    # UDP traffic ratio thresholds (0.0-1.0)
+    udp_ratio_suspicious: 0.80    # 80% UDP is suspicious
+    udp_ratio_critical: 0.95      # 95% UDP is critical
+
+    # Unique source IP thresholds (botnet indicators)
+    unique_ips_warning: 1000      # Warning level
+    unique_ips_critical: 3000     # Critical level
+
+    # Packet size threshold
+    avg_packet_size_suspicious: 300  # Average packet size in bytes
+
+# Traffic ingestion configuration
+ingestion:
+  max_packet_buffer_size: 100000    # Maximum packets to buffer
+  max_packets_per_second: 1000000   # Rate limit for ingestion
+  enable_rate_limiting: true        # Enable rate limiting
+
+# SafeDeepAgent security configuration
+safe_agent:
+  enable_action_validation: true
+  enable_memory_firewalls: true
+  enable_provenance_tracking: true
+  enable_sandboxing: true
+  enable_behavioral_monitoring: true
+  enable_meta_supervision: true
+  enable_audit_logging: true
+  enable_purpose_binding: true
+  enable_intent_tracking: true
+  enable_deception_detection: true
+  enable_risk_adaptation: true
+  enable_human_governance: true
+
+# Logging configuration
+logging:
+  level: INFO                     # DEBUG, INFO, WARNING, ERROR
+  format: json                    # json or console
+  output: stdout                  # stdout or file
+  file_path: null                 # Path if output=file
+
+# Deployment configuration
+deployment_mode: standalone       # standalone, distributed
+environment: development          # development, staging, production
+
+# Environment-specific overrides
+# You can override any setting using environment variables:
+# DDOS_SENTINEL_DETECTION__SENSITIVITY=0.9
+# DDOS_SENTINEL_DETECTION__THRESHOLDS__PPS_CRITICAL=200000
